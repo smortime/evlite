@@ -1,6 +1,22 @@
 use std::io;
 use std::io::Write;
 
+struct Row {
+    id: i32,
+    dog_name: String,
+    breed: String,
+}
+
+impl Row {
+    fn new(id: i32, dog_name: String, breed: String) -> Self {
+        Row {
+            id,
+            dog_name,
+            breed,
+        }
+    }
+}
+
 enum MetaResult {
     Success,
     Failure,
@@ -15,14 +31,12 @@ enum StatementType {
 }
 
 impl StatementType {
-
     fn get_statement_type(statement: &String) -> StatementType {
-
         if statement.starts_with("select") {
-            return StatementType::Select; 
-         } else if statement.starts_with("insert") {
-             return StatementType::Insert;
-         }
+            return StatementType::Select;
+        } else if statement.starts_with("insert") {
+            return StatementType::Insert;
+        }
         StatementType::Unrecognized
     }
 }
@@ -30,16 +44,21 @@ impl StatementType {
 struct Statement {
     statement_type: StatementType,
     statement_str: String,
+    row: Option<Row>,
 }
 
-impl Statement {
-    fn new(statement_str: String) -> Self {
-        Statement {
-            statement_type: StatementType::get_statement_type(&statement_str),
-            statement_str,
-        }
-    }
+fn prepare_statement(statement_str: String) -> Statement {
+    let statement_type = StatementType::get_statement_type(&statement_str);
+    let row = match statement_type {
+        StatementType::Insert => Some(Row::new(123, "Evie".to_string(), "Jindo".to_string())),
+        _ => None,
+    };
 
+    Statement {
+        statement_type,
+        statement_str,
+        row,
+    }
 }
 
 fn main() {
@@ -58,14 +77,17 @@ fn main() {
                 MetaResult::ExitSuccess => break,
             }
         } else {
-            let statement = Statement::new(user_input);
+            let statement = prepare_statement(user_input);
             match statement.statement_type {
                 StatementType::Insert => println!("This is insert land"),
                 StatementType::Select => println!("This is select land"),
                 StatementType::Unrecognized => {
-                    println!("Error: {} is unrecognized statement", statement.statement_str);
+                    println!(
+                        "Error: {} is unrecognized statement",
+                        statement.statement_str
+                    );
                     break;
-                } 
+                }
             }
         }
         println!();
