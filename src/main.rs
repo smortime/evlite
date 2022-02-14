@@ -8,11 +8,13 @@ struct Row {
 }
 
 impl Row {
-    fn new(id: i32, dog_name: String, breed: String) -> Self {
+    fn new(statement_str: &String) -> Self {
+        let mut split = statement_str.split_whitespace();
+        split.next();
         Row {
-            id,
-            dog_name,
-            breed,
+            id: split.next().unwrap().parse().unwrap(),
+            dog_name: split.next().unwrap().to_string(),
+            breed: split.next().unwrap().to_string(),
         }
     }
 }
@@ -50,7 +52,7 @@ struct Statement {
 fn prepare_statement(statement_str: String) -> Statement {
     let statement_type = StatementType::get_statement_type(&statement_str);
     let row = match statement_type {
-        StatementType::Insert => Some(Row::new(123, "Evie".to_string(), "Jindo".to_string())),
+        StatementType::Insert => Some(Row::new(&statement_str)),
         _ => None,
     };
 
@@ -79,6 +81,7 @@ fn main() {
         } else {
             let statement = prepare_statement(user_input);
             match statement.statement_type {
+                // insert 1 evie jindo
                 StatementType::Insert => println!("This is insert land"),
                 StatementType::Select => println!("This is select land"),
                 StatementType::Unrecognized => {
@@ -111,9 +114,6 @@ fn handle_meta_command(command: &String) -> MetaResult {
             println!("Goodbye");
             return MetaResult::ExitSuccess;
         }
-        p => {
-            print!("Error: {} is an unrecognized command", p);
-            return MetaResult::Unrecognized;
-        }
+        _ => return MetaResult::Unrecognized,
     };
 }
