@@ -1,6 +1,30 @@
 use std::io;
 use std::io::Write;
 
+#[derive(Clone)]
+struct Table {
+    rows: Vec<Row>,
+}
+
+impl Table {
+   fn new() -> Self {
+       Table {
+           rows: Vec::new(),
+       }
+   }
+
+   fn insert_row(&mut self, row: &Row) {
+       self.rows.push(row.clone())
+   }
+
+   fn select_rows(&self) {
+       self.rows.iter().for_each(|row| {
+           println!("{:?} {:?} {:?}", row.id, row.dog_name, row.breed);
+       })
+   }
+}
+
+#[derive(Clone)]
 struct Row {
     id: i32,
     dog_name: String,
@@ -64,6 +88,7 @@ fn prepare_statement(statement_str: String) -> Statement {
 }
 
 fn main() {
+    let mut table = Table::new();
     println!("Welcome to EVLite Beta\nType 'help' for usage hints");
     loop {
         let user_input = prompt("evlite> ");
@@ -82,8 +107,15 @@ fn main() {
             let statement = prepare_statement(user_input);
             match statement.statement_type {
                 // insert 1 evie jindo
-                StatementType::Insert => println!("This is insert land"),
-                StatementType::Select => println!("This is select land"),
+                StatementType::Insert => {
+                    match statement.row {
+                        Some(x) => table.insert_row(&x),
+                        None => println!("No row to insert!"),
+                    }
+                },
+                StatementType::Select => {
+                    table.select_rows();
+                },
                 StatementType::Unrecognized => {
                     println!(
                         "Error: {} is unrecognized statement",
