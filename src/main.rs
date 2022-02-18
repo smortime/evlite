@@ -7,21 +7,23 @@ struct Table {
 }
 
 impl Table {
-   fn new() -> Self {
-       Table {
-           rows: Vec::new(),
-       }
-   }
+    fn new() -> Self {
+        Table { rows: Vec::new() }
+    }
 
-   fn insert_row(&mut self, row: &Row) {
-       self.rows.push(row.clone())
-   }
+    fn insert_row(&mut self, row: &Row) {
+        self.rows.push(row.clone())
+    }
 
-   fn select_rows(&self) {
-       self.rows.iter().for_each(|row| {
-           println!("{:?} {:?} {:?}", row.id, row.dog_name, row.breed);
-       })
-   }
+    fn select_rows(&self) {
+        self.rows.iter().for_each(|row| {
+            println!("{:?} {:?} {:?}", row.id, row.dog_name, row.breed);
+        })
+    }
+
+    fn row_count(&self) -> usize {
+        return self.rows.len();
+    }
 }
 
 #[derive(Clone)]
@@ -43,6 +45,7 @@ impl Row {
     }
 }
 
+#[derive(Debug, PartialEq)]
 enum MetaResult {
     Success,
     Failure,
@@ -50,6 +53,7 @@ enum MetaResult {
     ExitSuccess,
 }
 
+#[derive(Debug, PartialEq)]
 enum StatementType {
     Select,
     Insert,
@@ -106,16 +110,13 @@ fn main() {
         } else {
             let statement = prepare_statement(user_input);
             match statement.statement_type {
-                // insert 1 evie jindo
-                StatementType::Insert => {
-                    match statement.row {
-                        Some(x) => table.insert_row(&x),
-                        None => println!("No row to insert!"),
-                    }
+                StatementType::Insert => match statement.row {
+                    Some(x) => table.insert_row(&x),
+                    None => println!("No row to insert!"),
                 },
                 StatementType::Select => {
                     table.select_rows();
-                },
+                }
                 StatementType::Unrecognized => {
                     println!(
                         "Error: {} is unrecognized statement",
@@ -148,4 +149,47 @@ fn handle_meta_command(command: &String) -> MetaResult {
         }
         _ => return MetaResult::Unrecognized,
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+
+    #[test]
+    fn row_tests() {
+        let row = Row::new(&"insert 1 evie jindo".to_string());
+        assert_eq!(row.id, 1);
+        assert_eq!(row.dog_name, "evie");
+        assert_eq!(row.breed, "jindo");
+    }
+
+    #[test]
+    fn table_tests() {
+        let mut table = Table::new();
+        assert_eq!(table.row_count(), 0);
+        table.insert_row(&Row::new(&"insert 1 evie jindo".to_string()));
+        assert_eq!(table.row_count(), 1);
+    }
+
+    #[test]
+    fn statement_tests() {
+        let select = prepare_statement("select *".to_string());
+        assert_eq!(select.statement_type, StatementType::Select);
+        assert!(select.row.is_none());
+        let insert = prepare_statement("insert 1 evie jindo".to_string());
+        assert_eq!(insert.statement_type, StatementType::Insert);
+        assert!(!insert.row.is_none());
+    }
+
+    #[test]
+    fn test_handle_meta_command() {
+        assert_eq!(
+            handle_meta_command(&".fake".to_string()),
+            MetaResult::Unrecognized
+        );
+        assert_eq!(
+            handle_meta_command(&".quit".to_string()),
+            MetaResult::ExitSuccess
+        );
+    }
 }
