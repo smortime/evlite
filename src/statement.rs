@@ -1,8 +1,5 @@
 use crate::database::Row;
 
-use sqlparser::dialect::SQLiteDialect;
-use sqlparser::parser::Parser;
-
 #[derive(Debug, PartialEq)]
 pub enum StatementType {
     Select,
@@ -41,12 +38,6 @@ pub fn prepare_statement(statement_str: String) -> Statement {
     }
 }
 
-pub fn parse_statement(statement_str: String) {
-    let dialect = SQLiteDialect {};
-    let ast = Parser::parse_sql(&dialect, &statement_str).unwrap();
-    print!("{:?}", ast);
-}
-
 #[cfg(test)]
 mod tests {
     use crate::statement::*;
@@ -59,11 +50,5 @@ mod tests {
         let insert = prepare_statement("insert 1 evie jindo".to_string());
         assert_eq!(insert.statement_type, StatementType::Insert);
         assert!(!insert.row.is_none());
-    }
-
-    #[test]
-    fn parse_statement_tests() {
-        let statement = "select * from dogs";
-        parse_statement(statement.to_string());
     }
 }
