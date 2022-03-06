@@ -1,3 +1,4 @@
+mod b_tree;
 mod database;
 mod statement;
 
